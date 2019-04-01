@@ -10,6 +10,9 @@ use Mojo::Promise;
 
 use constant DEBUG => $ENV{MOJO_GRAPHITE_WRITER_DEBUG};
 
+our $VERSION = '0.01';
+$VERSION = eval $VERSION;
+
 has address    => sub { Carp::croak 'address is required' };
 has batch_size => 100;
 has port       => 2003;
