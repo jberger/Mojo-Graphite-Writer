@@ -10,7 +10,7 @@ use Mojo::Promise;
 
 use constant DEBUG => $ENV{MOJO_GRAPHITE_WRITER_DEBUG};
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 $VERSION = eval $VERSION;
 
 has address    => sub { Carp::croak 'address is required' };
@@ -62,7 +62,7 @@ sub write {
 }
 
 sub _write {
-  my $self = @_;
+  my $self = shift;
   return unless @{ $self->{queue} ||= [] };
 
   return if $self->{writing};
