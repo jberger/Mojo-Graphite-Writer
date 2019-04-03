@@ -74,18 +74,17 @@ sub _write {
       my $write = sub {
         my $queue = $self->{queue};
 
-        # queue is empty
-        unless (@$queue) {
-          $self->{writing} = 0;
-          return;
-        }
-
         # this batch is done
         unless (@{ $queue->[0][0] }) {
           my $item = shift @$queue;
           my $p = $item->[1];
           $p->resolve;
-          return unless @$queue;
+        }
+
+        # queue is empty
+        unless (@$queue) {
+          $self->{writing} = 0;
+          return;
         }
 
         my $string = join '', map { chomp; "$_\n" } splice @{ $queue->[0][0] }, 0, $self->batch_size;
@@ -192,10 +191,6 @@ Passing structures to L</write> and handling the formatting
 
 Possibly a blocking api, though this is questionable
 
-=item *
-
-Testing
-
 =back
 
 =head1 SEE ALSO
@@ -223,6 +218,10 @@ Joel Berger, E<lt>joel.a.berger@gmail.comE<gt>
 =head1 CONTRIBUTORS
 
 None yet.
+
+=head1 THANKS
+
+Mohammad S Anwar (manwar)
 
 =head1 COPYRIGHT AND LICENSE
 
