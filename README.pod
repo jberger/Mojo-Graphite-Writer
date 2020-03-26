@@ -103,7 +103,7 @@ This module's development was sponsored by L<ServerCentral Turing Group|https://
 
 =head1 SOURCE REPOSITORY
 
-L<http://github.com/jberger/Mojo-Redfish-Client>
+L<http://github.com/jberger/Mojo-Graphite-Writer>
 
 =head1 AUTHOR
 
