@@ -10,7 +10,7 @@ use Mojo::Promise;
 
 use constant DEBUG => $ENV{MOJO_GRAPHITE_WRITER_DEBUG};
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 $VERSION = eval $VERSION;
 
 has address    => sub { Carp::croak 'address is required' };
@@ -27,6 +27,10 @@ sub close {
 sub connect {
   my ($self, %args) = @_;
   my $p = Mojo::Promise->new;
+
+  # Fork-safety
+  delete @$self{qw(pid stream)} unless ($self->{pid} //= $$) eq $$;
+
   if (my $stream = $self->{stream}) {
     say STDERR "Reusing existing Graphite connection" if DEBUG;
     $p->resolve($stream);
