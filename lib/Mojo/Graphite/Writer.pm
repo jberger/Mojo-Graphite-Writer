@@ -233,8 +233,7 @@ The promise is rejected if any write in the write queue fails, even if it is not
 
 =head1 FUTURE WORK
 
-This module is still in early development.
-Future work will include
+Future work may include
 
 =over
 
