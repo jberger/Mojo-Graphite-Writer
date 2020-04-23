@@ -53,16 +53,16 @@ is $open, 1, 'opened once';
 is $close, 0, 'connection not closed';
 
 # test fork safety (test method borrowed from mojo-pg)
-my $old;
-$graphite->connect->then(sub{ $old = shift })->wait;
-is $open, 1, 'opened once';
-{
+subtest 'fork safety' => sub {
+  my ($old, $new);
+  $graphite->connect->then(sub{ $old = shift })->wait;
+  is $open, 1, 'opened once';
+
   local $$ = -23;
-  my $new;
   $graphite->connect->then(sub{ $new = shift })->wait;
   isnt $old, $new, 'new connection';
   is $open, 2, 'reopened';
-}
+};
 
 done_testing;
 
