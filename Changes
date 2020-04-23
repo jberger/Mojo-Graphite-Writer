@@ -1,6 +1,6 @@
 Revision history for Perl module Mojo::Graphite::Writer
 
-0.06
+0.06 2020-04-23
   - Fork safety (borrowed from Mojo::Pg)
   - Preprocess metrics from structured data
 
