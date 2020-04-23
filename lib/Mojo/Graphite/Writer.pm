@@ -15,6 +15,7 @@ $VERSION = eval $VERSION;
 
 has address    => sub { Carp::croak 'address is required' };
 has batch_size => 100;
+has preprocess => sub { \&_preprocess };
 has port       => 2003;
 
 sub close {
@@ -60,9 +61,35 @@ sub connect {
 sub write {
   my ($self, @metrics) = @_;
   my $p = Mojo::Promise->new;
+  if (my $cb = $self->preprocess) {
+    @metrics = map { ref ? $cb->($_) : $_ } @metrics;
+  }
   push @{ $self->{queue} }, [\@metrics, $p];
   $self->_write;
   return $p;
+}
+
+sub _preprocess {
+  # N.B. this function isn't called on raw strings
+  # clone the array contents so as not to modify originals
+  my @metric = @{$_[0]};
+
+  # default to current time
+  $metric[2] = time unless defined $metric[2];
+
+  # format tags, append to name
+  if ($metric[3] && keys %{$metric[3]}) {
+    no warnings 'uninitialized';
+    $metric[0] .= ';' . join ';',
+      # clean up invalid characters
+      map { s/\(|\)//gr }
+      map { s/\s+/_/gr }
+      # basic structure
+      map { "$_=$metric[3]{$_}" }
+      sort keys %{$metric[3]};
+  }
+
+  return "$metric[0] $metric[1] $metric[2]";
 }
 
 sub _write {
@@ -122,6 +149,14 @@ Mojo::Graphite::Writer - A non-blocking Graphite metric writer using the Mojo st
     ...
   );
 
+  # preprocessing
+  $graphite->write(
+    ['my.metric.three', 3],
+    ['my.metric.four',  4, $time],
+    ['my.metric.five',  5, undef, {foo => 'bar'}],
+    ...
+  );
+
 =head1 DESCRIPTION
 
 L<Mojo::Graphite::Writer> is a non-blocking client for feeding data to the Graphite metrics collector.
@@ -142,6 +177,20 @@ Required.
 
 The number of metrics to send in each write batch.
 Default is 100.
+
+=head2 preprocess
+
+A callback that is used to process a metric specified as an arrayref, the callback is not called on raw strings.
+The callback is passed the array reference as its only argument, it should return a string to be written, it need not end with a newline.
+
+The default callback expects a metric arrayref to contain a metric name and a value in the first two slots.
+If the time is not specified in the third slot (or is undef) then the current time will be used.
+If the fourth slot contains a non-empty hashref then those will be treated as key-value tags.
+The tags will be cleaned up, removing parenthesis characters and converting spaces to underscores.
+They will then be formatted by joining keys and values with an equal sign and joined to the metric name with semicolons.
+
+Preprocessing can be fully disabled by setting the attribute to a false value.
+Passing an array reference without a preprocessing callback will probably not do anything useful.
 
 =head2 port
 
@@ -173,8 +222,12 @@ Metrics are queued and written to the server in a non-blocking way, in the order
 Metrics are strings of the form C<path value time> as documented as L<"the plaintext protocol"|https://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-plaintext-protocol>.
 Each string is one metric.
 It will be line-ending normalized, no newline is required.
-Writes are batched in groups of size L</batch_size>.
 
+Metrics may also be specified as an array reference.
+If so they will be preprocessed using the callback in L</preprocess> which will transform it to a string to be written as documented above.
+Preprocessing occurs immediately during the call to write.
+
+Writes are batched in groups of size L</batch_size>.
 If the writer is not already connected, calling write will implicitly call L</connect>.
 
 Returns a L<Mojo::Promise> that will be resolved when the metrics passed B<in this write call> are written.
@@ -186,10 +239,6 @@ This module is still in early development.
 Future work will include
 
 =over
-
-=item *
-
-Passing structures to L</write> and handling the formatting
 
 =item *
 

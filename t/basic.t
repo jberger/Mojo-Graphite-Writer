@@ -64,5 +64,18 @@ subtest 'fork safety' => sub {
   is $open, 2, 'reopened';
 };
 
+$read = '';
+subtest 'preprocess' => sub {
+  no warnings 'once';
+  local *CORE::GLOBAL::time = sub { $time };
+  $graphite->write(
+    ['c.one', 1], # default time
+    ['c.two', 2, $time, {foo => 'bar', baz => 'bat'}], # tags
+    ['c.three', 3, undef, {foo => 'bar', baz => 'bat'}], # both
+    ['c.four', 4, $time, {'what()' => 'this that', 'null' => undef}], # cleanup
+  )->wait;
+  is $read, "c.one 1 $time\nc.two;baz=bat;foo=bar 2 $time\nc.three;baz=bat;foo=bar 3 $time\nc.four;null=;what=this_that 4 $time\n", 'expected write';
+};
+
 done_testing;
 
