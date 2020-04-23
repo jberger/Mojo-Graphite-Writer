@@ -160,9 +160,7 @@ Mojo::Graphite::Writer - A non-blocking Graphite metric writer using the Mojo st
 =head1 DESCRIPTION
 
 L<Mojo::Graphite::Writer> is a non-blocking client for feeding data to the Graphite metrics collector.
-This simple module is meant to aid in batching and queuing writes to the server.
-
-This is still a work-in-progress, however the author uses it in work applications so every effort will be made to keep the api reasonably stable while improving where possible.
+This simple module is meant to aid in formattting, batching, and queuing writes to the server in a fork-safe way.
 
 =head1 ATTRIBUTES
 
