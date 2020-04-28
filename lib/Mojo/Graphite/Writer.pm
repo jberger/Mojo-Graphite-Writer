@@ -10,7 +10,7 @@ use Mojo::Promise;
 
 use constant DEBUG => $ENV{MOJO_GRAPHITE_WRITER_DEBUG};
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 $VERSION = eval $VERSION;
 
 has address    => sub { Carp::croak 'address is required' };
@@ -62,7 +62,8 @@ sub write {
   my ($self, @metrics) = @_;
   my $p = Mojo::Promise->new;
   if (my $cb = $self->preprocess) {
-    @metrics = map { ref ? $cb->($_) : $_ } @metrics;
+    # need parens on ref to disambiguate on older perls
+    @metrics = map { ref() ? $cb->($_) : $_ } @metrics;
   }
   push @{ $self->{queue} }, [\@metrics, $p];
   $self->_write;

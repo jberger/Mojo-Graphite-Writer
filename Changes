@@ -1,5 +1,8 @@
 Revision history for Perl module Mojo::Graphite::Writer
 
+0.08 2020-04-29
+  - Fix disambiguation bug in older perls (CPANTesters++)
+
 0.07 2020-04-23
   - More robust test for formatting
 
