@@ -73,8 +73,8 @@ subtest 'fork safety' => sub {
 
 $read = '';
 subtest 'preprocess' => sub {
-  no warnings 'once';
-  local *CORE::GLOBAL::time = sub { $time };
+  no warnings 'redefine';
+  local *Mojo::Graphite::Writer::_time = sub () { $time };
   $e->on(read => sub { Mojo::IOLoop->stop });
   $graphite->write(
     ['c.one', 1], # default time
@@ -85,6 +85,7 @@ subtest 'preprocess' => sub {
   Mojo::IOLoop->start;
   is $read, "c.one 1 $time\nc.two;baz=bat;foo=bar 2 $time\nc.three;baz=bat;foo=bar 3 $time\nc.four;null=;what=this_that 4 $time\n", 'expected write';
 };
+
 
 done_testing;
 

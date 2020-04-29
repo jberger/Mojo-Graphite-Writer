@@ -76,7 +76,7 @@ sub _preprocess {
   my @metric = @{$_[0]};
 
   # default to current time
-  $metric[2] = time unless defined $metric[2];
+  $metric[2] = _time() unless defined $metric[2];
 
   # format tags, append to name
   if ($metric[3] && keys %{$metric[3]}) {
@@ -92,6 +92,9 @@ sub _preprocess {
 
   return "$metric[0] $metric[1] $metric[2]";
 }
+
+# better overridablility in testing, yes I hate that but ...
+BEGIN { *_time = \&CORE::time }
 
 sub _write {
   my $self = shift;
