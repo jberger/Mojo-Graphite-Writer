@@ -13,9 +13,9 @@ my $open  = 0;
 my $close = 0;
 my $id = Mojo::IOLoop->server(address => '127.0.0.1', sub {
   my (undef, $stream, $id) = @_;
-  $open++;
   $stream->on(read  => sub { $read .= $_[1]; $e->emit(read => $read); });
   $stream->on(close => sub { $close++ });
+  $e->emit(open => ++$open);
 });
 my $port = Mojo::IOLoop->acceptor($id)->port;
 
@@ -59,7 +59,14 @@ subtest 'fork safety' => sub {
   is $open, 1, 'opened once';
 
   local $$ = -23;
-  $graphite->connect->then(sub{ $new = shift })->wait;
+  my $p = Mojo::Promise->new->timeout(5);
+  $p->catch(sub{ fail 'Timeout!' });
+  $p->finally(sub{ Mojo::IOLoop->stop });
+  $e->once(open => sub { $p->resolve });
+
+  $graphite->connect->then(sub{ $new = shift });
+  Mojo::IOLoop->start;
+
   isnt $old, $new, 'new connection';
   is $open, 2, 'reopened';
 };
